@@ -1,0 +1,52 @@
+name: Build & Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPO: skyrouter-prod-frontend
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        id: build
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}
+          REPO=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}
+          docker build \
+            --build-arg BACKEND_URL=http://backend-backend:8080 \
+            -t $REPO:$IMAGE_TAG \
+            -t $REPO:latest \
+            .
+          docker push $REPO:$IMAGE_TAG
+          docker push $REPO:latest
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Trigger deploy in skyrouter-infra
+        run: |
+          curl -fsSL -X POST \
+            -H "Authorization: Bearer ${{ secrets.INFRA_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/Traezar/skyrouter-infra/dispatches \
+            -d "{\"event_type\":\"deploy-app\",\"client_payload\":{\"service\":\"frontend\",\"image_tag\":\"${{ steps.build.outputs.IMAGE_TAG }}\",\"actor\":\"${{ github.actor }}\"}}"

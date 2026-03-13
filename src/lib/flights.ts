@@ -1,5 +1,3 @@
-import { createServerFn } from '@tanstack/react-start'
-
 export type RouteWaypoint = {
   seqNum: number
   waypointName: string
@@ -32,20 +30,17 @@ export type FlightFilters = {
   date_to?: string
 }
 
-export const fetchFlights = createServerFn({ method: 'GET' })
-  .inputValidator((filters: FlightFilters) => filters)
-  .handler(async ({ data }) => {
-    const params = new URLSearchParams()
-    if (data.callsign) params.set('callsign', data.callsign)
-    if (data.departure) params.set('departure', data.departure)
-    if (data.destination) params.set('destination', data.destination)
-    if (data.operator) params.set('operator', data.operator)
-    if (data.date_from) params.set('date_from', data.date_from)
-    if (data.date_to) params.set('date_to', data.date_to)
+export async function fetchFlights(filters: FlightFilters): Promise<Flight[]> {
+  const params = new URLSearchParams()
+  if (filters.callsign) params.set('callsign', filters.callsign)
+  if (filters.departure) params.set('departure', filters.departure)
+  if (filters.destination) params.set('destination', filters.destination)
+  if (filters.operator) params.set('operator', filters.operator)
+  if (filters.date_from) params.set('date_from', filters.date_from)
+  if (filters.date_to) params.set('date_to', filters.date_to)
 
-    const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:8080'
-    const url = `${backendUrl}/flights${params.size ? `?${params}` : ''}`
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json() as Promise<Flight[]>
-  })
+  const url = `/api/flights${params.size ? `?${params}` : ''}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}

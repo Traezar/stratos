@@ -82,7 +82,7 @@ function FlightsPage() {
 
   useEffect(() => {
     setLoading(true)
-    fetchFlights({ data: filters })
+    fetchFlights(filters)
       .then(setFlights)
       .catch(() => setFlights([]))
       .finally(() => setLoading(false))

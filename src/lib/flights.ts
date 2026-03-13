@@ -43,7 +43,8 @@ export const fetchFlights = createServerFn({ method: 'GET' })
     if (data.date_from) params.set('date_from', data.date_from)
     if (data.date_to) params.set('date_to', data.date_to)
 
-    const url = `http://127.0.0.1:8080/flights${params.size ? `?${params}` : ''}`
+    const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:8080'
+    const url = `${backendUrl}/flights${params.size ? `?${params}` : ''}`
     const res = await fetch(url)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     return res.json() as Promise<Flight[]>

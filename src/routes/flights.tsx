@@ -212,7 +212,11 @@ function FlightsPage() {
               </TableRow>
             ) : (
               paginated.map((f) => (
-                <TableRow key={f.id} className="hover:bg-muted/40 cursor-pointer">
+                <TableRow
+                  key={f.id}
+                  className="hover:bg-muted/40 cursor-pointer"
+                  onClick={() => navigate({ to: '/flights/$flightId', params: { flightId: f.id }, state: (s) => ({ ...s, flight: f }) })}
+                >
                   <TableCell className="font-mono font-medium">
                     <Badge variant="outline">{f.callsign}</Badge>
                   </TableCell>

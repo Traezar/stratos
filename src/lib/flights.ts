@@ -29,6 +29,11 @@ export type FlightFilters = {
   date_from?: string
   date_to?: string
 }
+export async function fetchFlight(id: string): Promise<Flight> {
+  const res = await fetch(`/api/flights/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
 
 export async function fetchFlights(filters: FlightFilters): Promise<Flight[]> {
   const params = new URLSearchParams()

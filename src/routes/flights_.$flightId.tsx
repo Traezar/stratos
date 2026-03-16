@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table'
-import { fetchFlight, type Flight } from '../lib/flights'
+import { fetchAlternatives, fetchFlight, type AlternativeRoute, type Flight, type RouteWaypoint } from '../lib/flights'
 
 const FlightMap = lazy(() => import('../components/FlightMap'))
 
@@ -58,6 +58,10 @@ function FlightDetailPage() {
   const [loading, setLoading] = useState(!stateFlight)
   const [error, setError] = useState(false)
 
+  const [alternatives, setAlternatives] = useState<AlternativeRoute[] | null>(null)
+  const [altLoading, setAltLoading] = useState(false)
+  const [showAlternatives, setShowAlternatives] = useState(false)
+
   useEffect(() => {
     if (stateFlight) return
     fetchFlight(flightId)
@@ -87,6 +91,33 @@ function FlightDetailPage() {
 
   const hasRoute = flight.route.length > 0
 
+  function handleToggleAlternatives() {
+    if (alternatives !== null) {
+      setShowAlternatives((v) => !v)
+      return
+    }
+    setAltLoading(true)
+    fetchAlternatives(flightId)
+      .then((data) => {
+        setAlternatives(data)
+        setShowAlternatives(true)
+      })
+      .catch(() => setAlternatives([]))
+      .finally(() => setAltLoading(false))
+  }
+
+  const inactiveRoutes: RouteWaypoint[][] | undefined =
+    showAlternatives && alternatives && alternatives.length > 0
+      ? alternatives.map((a) =>
+          a.waypoints.map((w, i) => ({
+            seqNum: i,
+            waypointName: w.name,
+            latitude: w.latitude,
+            longitude: w.longitude,
+          })),
+        )
+      : undefined
+
   return (
     <div className="flex h-full overflow-hidden">
       {/* ── Left panel: metadata + route table ── */}
@@ -99,9 +130,26 @@ function FlightDetailPage() {
           >
             ← Flights
           </Link>
-          <div className="mt-2 flex items-center gap-2">
-            <h1 className="font-mono text-xl font-bold">{flight.callsign}</h1>
-            <Badge variant="outline">{flight.flightType}</Badge>
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="font-mono text-xl font-bold">{flight.callsign}</h1>
+              <Badge variant="outline">{flight.flightType}</Badge>
+            </div>
+            {hasRoute && (
+              <button
+                type="button"
+                onClick={handleToggleAlternatives}
+                disabled={altLoading}
+                className={[
+                  'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50',
+                  showAlternatives
+                    ? 'border-transparent bg-primary text-primary-foreground'
+                    : 'border-border bg-background text-foreground hover:bg-muted',
+                ].join(' ')}
+              >
+                {altLoading ? 'Loading…' : 'Alternatives'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -156,7 +204,7 @@ function FlightDetailPage() {
       <div className="relative flex-1">
         {hasRoute ? (
           <Suspense>
-            <FlightMap route={flight.route} />
+            <FlightMap route={flight.route} inactiveRoutes={inactiveRoutes} />
           </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">

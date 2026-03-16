@@ -11,8 +11,12 @@ const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.j
 
 const COLOR_PATH: [number, number, number] = [59, 130, 246]
 const COLOR_WPT: [number, number, number] = [250, 204, 21]
+const COLOR_INACTIVE: [number, number, number, number] = [100, 116, 139, 140]
 
-type Props = { route: RouteWaypoint[] }
+type Props = {
+  route: RouteWaypoint[]
+  inactiveRoutes?: RouteWaypoint[][]
+}
 
 function getInitialViewState(route: RouteWaypoint[]) {
   const pts = route.filter((w) => w.latitude != null && w.longitude != null)
@@ -26,16 +30,39 @@ function getInitialViewState(route: RouteWaypoint[]) {
   }
 }
 
-export default function FlightMap({ route }: Props) {
+export default function FlightMap({ route, inactiveRoutes }: Props) {
   const positioned = useMemo(
     () => route.filter((w) => w.latitude != null && w.longitude != null),
     [route],
+  )
+
+  const inactivePaths = useMemo(
+    () =>
+      (inactiveRoutes ?? [])
+        .map((r) =>
+          r
+            .filter((w) => w.latitude != null && w.longitude != null)
+            .map((w) => [w.longitude!, w.latitude!]),
+        )
+        .filter((p) => p.length > 0)
+        .map((path) => ({ path })),
+    [inactiveRoutes],
   )
 
   const layers = useMemo(() => {
     if (positioned.length === 0) return []
     const path = positioned.map((w) => [w.longitude!, w.latitude!])
     return [
+      inactivePaths.length > 0 &&
+        new PathLayer<{ path: number[][] }>({
+          id: 'inactive-paths',
+          data: inactivePaths,
+          getPath: (d) => d.path,
+          getColor: COLOR_INACTIVE,
+          getWidth: 1.5,
+          widthUnits: 'pixels',
+          widthMinPixels: 1,
+        }),
       new PathLayer<{ path: number[][] }>({
         id: 'route-path',
         data: [{ path }],
@@ -68,8 +95,8 @@ export default function FlightMap({ route }: Props) {
         outlineWidth: 2,
         fontSettings: { sdf: true },
       }),
-    ]
-  }, [positioned])
+    ].filter(Boolean)
+  }, [positioned, inactivePaths])
 
   return (
     <DeckGL

@@ -35,6 +35,24 @@ export async function fetchFlight(id: string): Promise<Flight> {
   return res.json()
 }
 
+export type AlternativeWaypoint = {
+  name: string
+  latitude: number
+  longitude: number
+}
+
+export type AlternativeRoute = {
+  rank: number
+  totalDistanceKm: number
+  waypoints: AlternativeWaypoint[]
+}
+
+export async function fetchAlternatives(flightId: string): Promise<AlternativeRoute[]> {
+  const res = await fetch(`/api/flights/${flightId}/alternatives?k=3`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
 export async function fetchFlights(filters: FlightFilters): Promise<Flight[]> {
   const params = new URLSearchParams()
   if (filters.callsign) params.set('callsign', filters.callsign)

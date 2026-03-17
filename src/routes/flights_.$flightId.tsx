@@ -204,7 +204,20 @@ function FlightDetailPage() {
       <div className="relative flex-1">
         {hasRoute ? (
           <Suspense>
-            <FlightMap route={flight.route} inactiveRoutes={inactiveRoutes} />
+            <FlightMap
+              route={flight.route}
+              inactiveRoutes={inactiveRoutes}
+              departure={
+                flight.departureLat != null && flight.departureLon != null
+                  ? { name: flight.departureAerodrome, latitude: flight.departureLat, longitude: flight.departureLon }
+                  : undefined
+              }
+              destination={
+                flight.destinationLat != null && flight.destinationLon != null
+                  ? { name: flight.destinationAerodrome, latitude: flight.destinationLat, longitude: flight.destinationLon }
+                  : undefined
+              }
+            />
           </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">

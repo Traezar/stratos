@@ -14,7 +14,11 @@ export type Flight = {
   aircraftType?: string
   aircraftRegistration?: string
   departureAerodrome: string
+  departureLat?: number
+  departureLon?: number
   destinationAerodrome: string
+  destinationLat?: number
+  destinationLon?: number
   dateOfFlight: string
   scheduledDepartureAt?: string
   scheduledArrivalAt?: string

@@ -63,12 +63,11 @@ function FlightDetailPage() {
   const [showAlternatives, setShowAlternatives] = useState(false)
 
   useEffect(() => {
-    if (stateFlight) return
     fetchFlight(flightId)
       .then(setFlight)
-      .catch(() => setError(true))
+      .catch(() => { if (!stateFlight) setError(true) })
       .finally(() => setLoading(false))
-  }, [flightId, stateFlight])
+  }, [flightId])
 
   if (loading) {
     return (

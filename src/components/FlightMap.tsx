@@ -74,7 +74,10 @@ export default function FlightMap({ route, inactiveRoutes, departure, destinatio
 
   const layers = useMemo(() => {
     if (positioned.length === 0) return []
-    const path = normalizePath(positioned.map((w) => [w.longitude!, w.latitude!]))
+    const rawCoords = positioned.map((w) => [w.longitude!, w.latitude!])
+    if (departure) rawCoords.unshift([departure.longitude, departure.latitude])
+    if (destination) rawCoords.push([destination.longitude, destination.latitude])
+    const path = normalizePath(rawCoords)
     return [
       inactivePaths.length > 0 &&
         new PathLayer<{ path: number[][] }>({

@@ -11,7 +11,7 @@ const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.j
 
 // Unwrap longitudes so consecutive points never jump >180°.
 // DeckGL with repeat:true renders coordinates outside ±180 correctly.
-function normalizePath(coords: number[][]): number[][] {
+export function normalizePath(coords: number[][]): number[][] {
   if (coords.length === 0) return coords
   const out = [coords[0]]
   for (let i = 1; i < coords.length; i++) {
